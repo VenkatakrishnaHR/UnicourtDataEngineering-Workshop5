@@ -4,13 +4,6 @@ info:
   description: All the APIs are related to Case Attributes.
   termsOfService: ""
   version: '2.0'
-  contact:
-    name: UniCourt Support
-    url: https://unicourt.com/contact-us
-    email: support@unicourt.com
-  license:
-    name: UniCourt
-    url: https://unicourt.com
 servers:
   - url: '${SERVER_URL}'
 
@@ -111,7 +104,6 @@ components:
 
   schemas:
     ArticlesByDate:
-      x-unicourt-container: false
       type: object
       properties:
         object:
@@ -155,7 +147,6 @@ components:
       - totalCount
 
     Article:
-      x-unicourt-container: false
       title: Article
       type: object
       nullable: true
