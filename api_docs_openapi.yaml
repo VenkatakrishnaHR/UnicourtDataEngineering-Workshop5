@@ -15,7 +15,7 @@ servers:
   - url: '${SERVER_URL}'
 
 paths:
-  /articleByDate/{articleCreatedDate}:
+  /articlesByDate/{articleCreatedDate}/:
     parameters:
     - in: path
       name: articleCreatedDate
@@ -40,7 +40,7 @@ paths:
     get:
       security:
         - bearerAuth: [ ]
-      operationId: getArticleByDate
+      operationId: getArticlesByDate
       tags:
         - Python web scrapping APIs
       summary: Get all articles for given date.
@@ -52,9 +52,9 @@ paths:
             application/json:
               examples:
                 ValidDate:
-                  $ref: "#/components/examples/ArticleByDate"
+                  $ref: "#/components/examples/ArticlesByDate"
               schema:
-                $ref: '#/components/schemas/ArticleByDate'
+                $ref: '#/components/schemas/ArticlesByDate'
           description: The request is received.
         '404':
           content:
@@ -80,12 +80,20 @@ components:
       bearerFormat: JWT  # for documentation purposes only
 
   examples:
-    ArticleByDate:
+    ArticlesByDate:
       value:
-        object: Exception
-        code: UN400
-        message: INVALID_INPUT
-        details: Request has failed while querying from the court. Please check your request parameters and retry.
+        object: ArticlesByDate
+        articleCreatedDate: 2022-09-04
+        articlesByDateArray:
+          - object: Article
+            title: "Python 3.13.0 alpha 1 is now available"
+            releaseDate: 2022-09-04
+            author: "Thomas Wouters"
+            blogTime: "8:31 AM"
+            createdDate: 2022-09-04
+        nextPageAPI: null
+        totalPages: 1
+        totalCount: 1
 
     InvalidCreatedDate:
       value:
@@ -102,309 +110,102 @@ components:
         details: No articles found for requested articleCreatedDate.
 
   schemas:
-    ArticleByDate:
+    ArticlesByDate:
       x-unicourt-container: false
       type: object
       properties:
         object:
           type: string
-          description: "Name of the object"
-          default: PACERPartySearchResults
-          minLength: 23
-          maxLength: 23
+          description: "Array of articles posted on given date"
+          default: ArticlesByDate
+          minLength: 14
+          maxLength: 14
           nullable: false
-        pacerContent:
-          $ref: '#/components/schemas/PACERPartySearchContent'
-        hasOnlyMetaInfo:
-          description: "This field determines if the UniCourt Content has only meta information. If the value is true and you require to get the latest updates of the case you will need to make a request to the updateCase API."
-          example: false
-          type: boolean
-        uniCourtContent:
-          $ref: 'https://gitlab.unicourt.net/researcher/apollo/a-src-srh-sdoc/-/raw/staging/a_src_srh_api_doc.yaml#/components/schemas/CaseSearchResult'
+        articleCreatedDate:
+          type: string
+          format: date-time
+          minLength: 10
+          maxLength: 10
+          example: 2022-09-04
+          nullable: false
+        articlesByDateArray:
+          type: array
+          items:
+            $ref: '#/components/schemas/Article'
+        nextPageAPI:
+          description: Link to next page of the ArticlesByDate Results.
+          example: ${SERVER_URL}/articlesByDate/2022-02-01/?pageNumber=2
+          type: string
+          maxLength: 255
+          nullable: true
+        totalPages:
+          description: Total number of pages to obtain all the objects of the ArticlesByDate Results.
+          example: 3
+          type: integer
+        totalCount:
+          description: Total number of records available for this Search.
+          example: 125
+          type: integer
       required:
       - object
-      - pacerContent
-      - hasOnlyMetaInfo
-      - uniCourtContent
+      - articleCreatedDate
+      - articlesByDateArray
+      - nextPageAPI
+      - totalPages
+      - totalCount
 
-    PossibleNormAttorney:
+    Article:
       x-unicourt-container: false
-      title: PossibleNormAttorney
+      title: Article
       type: object
       nullable: true
       properties:
         object:
           type: string
           description: Name of the object
-          default: PossibleNormAttorney
-          minLength: 20
-          maxLength: 20
+          default: Article
+          minLength: 7
+          maxLength: 7
           nullable: false
-        normAttorneyId:
+        title:
           type: string
-          minLength: 18
-          maxLength: 18
+          minLength: 3
+          maxLength: 200
           nullable: false
-        normAttorneyName:
+          example: "Python 3.13.0 alpha 1 is now available"
+        releaseDate:
           type: string
-          maxLength: 500
+          format: date-time
+          minLength: 10
+          maxLength: 10
+          example: 2022-09-04
           nullable: false
-        bestMatch:
-          type: boolean
-          default: false
-        confidenceScore:
-          type: number
-          format: float
-        scoreConstituents:
-          type: object
-          required:
-            - nameSimilarityScore
-            - otherPotentialNormAttorneys
-            - barId
-            - address
-            - email
-            - phone
-            - lawFirm
-          properties:
-            nameSimilarityScore:
-              type: number
-              format: float
-            otherPotentialNormAttorneys:
-              type: integer
-            barId:
-              type: string
-              maxLength: 250
-              nullable: false
-              enum:
-                - Matched
-                - Mismatched
-                - Not_Provided_By_Data_Source
-            address:
-              type: string
-              maxLength: 250
-              nullable: false
-              enum:
-                - Matched
-                - Mismatched
-                - Not_Provided_By_Data_Source
-            email:
-              type: string
-              maxLength: 250
-              nullable: false
-              enum:
-                - Matched
-                - Mismatched
-                - Not_Provided_By_Data_Source
-            phone:
-              type: string
-              maxLength: 250
-              nullable: false
-              enum:
-                - Matched
-                - Mismatched
-                - Not_Provided_By_Data_Source
-            lawFirm:
-              type: string
-              maxLength: 250
-              nullable: false
-              enum:
-                - Matched
-                - Mismatched
-                - Not_Provided_By_Data_Source
-        normAttorneyAPI:
-          x-logical-reference: NormAttorneyAPI
-          maxLength: 255
+        author:
           type: string
-          format: uri
+          minLength: 3
+          maxLength: 50
+          example: "Thomas Wouters"
           nullable: false
-        associatedNormJudgesAPI:
-          x-logical-reference: AssociatedNormJudgesForNormAttorneyAPI
+        blogTime:
           type: string
-          maxLength: 255
-          format: uri
-          nullable: false
-        associatedNormLawFirmsAPI:
-          x-logical-reference: AssociatedNormLawFirmsForNormAttorneyAPI
+          minLength: 7
+          maxLength: 8
+          example: "8:31 AM"
+          nullable: true
+        createdDate:
           type: string
-          maxLength: 255
-          format: uri
-          nullable: false
-        associatedNormPartiesAPI:
-          x-logical-reference: AssociatedNormPartiesForNormAttorneyAPI
-          type: string
-          maxLength: 255
-          format: uri
-          nullable: false
-        caseCountAnalyticsByNormAttorneyAPI:
-          x-logical-reference: CaseCountAnalyticsByNormAttorneyAPI
-          type: string
-          maxLength: 255
-          format: uri
-          nullable: false
-        caseCountAnalyticsByOpposingNormAttorneyAPI:
-          x-logical-reference: CaseCountAnalyticsByOpposingNormAttorneyAPI
-          type: string
-          maxLength: 255
-          format: uri
+          format: date-time
+          minLength: 10
+          maxLength: 10
+          example: 2022-09-04
           nullable: false
       required:
         - object
-        - normAttorneyId
-        - normAttorneyName
-        - bestMatch
-        - confidenceScore
-        - scoreConstituents
-        - normAttorneyAPI
-        - associatedNormJudgesAPI
-        - associatedNormLawFirmsAPI
-        - associatedNormPartiesAPI
-        - caseCountAnalyticsByNormAttorneyAPI
-        - caseCountAnalyticsByOpposingNormAttorneyAPI
-    PossibleNormLawFirm:
-      x-unicourt-container: false
-      title: PossibleNormLawFirm
-      type: object
-      nullable: true
-      properties:
-        object:
-          type: string
-          description: Name of the object
-          default: PossibleNormLawFirm
-          minLength: 19
-          maxLength: 19
-          nullable: false
-        normLawFirmId:
-          type: string
-          minLength: 18
-          maxLength: 18
-          nullable: false
-        normLawFirmName:
-          type: string
-          maxLength: 500
-          nullable: false
-        bestMatch:
-          type: boolean
-          default: false
-        sourceDetails:
-          type: object
-          required:
-            - source
-            - linkedNormAttorneyIdArray
-          properties:
-            source:
-              type: string
-              maxLength: 250
-              enum:
-                - Case_Attorney_Linked_In_Other_Cases
-                - Case_Attorney_Field_Contains_Law_Firm
-              nullable: true
-            linkedNormAttorneyIdArray:
-              type: array
-              items:
-                type: string
-                maxLength: 18
-                minLength: 18
-                nullable: false
-        confidenceScore:
-          type: number
-          format: float
-        scoreConstituents:
-          type: object
-          required:
-            - nameSimilarityScore
-            - otherPotentialNormLawFirms
-            - secretaryOfStateId
-            - address
-            - email
-            - phone
-          properties:
-            nameSimilarityScore:
-              type: number
-              format: float
-            otherPotentialNormLawFirms:
-              type: integer
-            secretaryOfStateId:
-              type: string
-              maxLength: 250
-              nullable: false
-              enum:
-                - Matched
-                - Mismatched
-                - Not_Provided_By_Data_Source
-            address:
-              type: string
-              maxLength: 250
-              nullable: false
-              enum:
-                - Matched
-                - Mismatched
-                - Not_Provided_By_Data_Source
-            email:
-              type: string
-              maxLength: 250
-              nullable: false
-              enum:
-                - Matched
-                - Mismatched
-                - Not_Provided_By_Data_Source
-            phone:
-              type: string
-              maxLength: 250
-              nullable: false
-              enum:
-                - Matched
-                - Mismatched
-                - Not_Provided_By_Data_Source
-        normLawFirmAPI:
-          x-logical-reference: NormLawFirmAPI
-          type: string
-          maxLength: 255
-          format: uri
-          nullable: false
-        associatedNormAttorneyAPI:
-          x-logical-reference: AssociatedNormAttorneysForNormLawFirmAPI
-          type: string
-          maxLength: 255
-          format: uri
-          nullable: false
-        associatedNormJudgeAPI:
-          x-logical-reference: AssociatedNormJudgesForNormLawFirmAPI
-          type: string
-          maxLength: 255
-          format: uri
-          nullable: false
-        associatedNormPartiesAPI:
-          x-logical-reference: AssociatedNormPartiesForNormJudgeAPI
-          type: string
-          maxLength: 255
-          format: uri
-          nullable: false
-        caseCountAnalyticsByNormLawFirmAPI:
-          x-logical-reference: CaseCountAnalyticsByNormLawFirmAPI
-          type: string
-          maxLength: 255
-          format: uri
-          nullable: false
-        caseCountAnalyticsByOpposingNormLawFirmAPI:
-          x-logical-reference: CaseCountAnalyticsByOpposingNormLawFirmAPI
-          type: string
-          maxLength: 255
-          format: uri
-          nullable: false
-      required:
-        - object
-        - normLawFirmId
-        - normLawFirmName
-        - bestMatch
-        - sourceDetails
-        - confidenceScore
-        - scoreConstituents
-        - normLawFirmAPI
-        - associatedNormAttorneyAPI
-        - associatedNormJudgeAPI
-        - associatedNormPartiesAPI
-        - caseCountAnalyticsByNormLawFirmAPI
-        - caseCountAnalyticsByOpposingNormLawFirmAPI
+        - title
+        - releaseDate
+        - author
+        - blogTime
+        - createdDate
 
     Exception:
       title: Exception
