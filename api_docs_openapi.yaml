@@ -1,0 +1,444 @@
+openapi: 3.0.0
+info:
+  title: Case API V2
+  description: All the APIs are related to Case Attributes.
+  termsOfService: ""
+  version: '2.0'
+  contact:
+    name: UniCourt Support
+    url: https://unicourt.com/contact-us
+    email: support@unicourt.com
+  license:
+    name: UniCourt
+    url: https://unicourt.com
+servers:
+  - url: '${SERVER_URL}'
+
+paths:
+  /articleByDate/{articleCreatedDate}:
+    parameters:
+    - in: path
+      name: articleCreatedDate
+      schema:
+        type: string
+        format: date-time
+        minLength: 10
+        maxLength: 10
+        nullable: false
+      examples:
+        HTTP200-ValidDate:
+          summary: ValidArticleCreatedDate
+          value: "2022-09-04"
+        HTTP404-InvalidCreatedDate:
+          summary: InvalidCreatedDate
+          value: "2022 09 04"
+        HTTP404-NoResultsFoundForCreatedDate:
+          summary: NoResultsFoundForCreatedDate
+          value: "2025-09-04"
+      required: true
+      description: Retrieve the case with the specified caseId value.
+    get:
+      security:
+        - bearerAuth: [ ]
+      operationId: getArticleByDate
+      tags:
+        - Python web scrapping APIs
+      summary: Get all articles for given date.
+      description: Gives all the parsed articles from python blogs for a given date.
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                ValidDate:
+                  $ref: "#/components/examples/ArticleByDate"
+              schema:
+                $ref: '#/components/schemas/ArticleByDate'
+          description: The request is received.
+        '404':
+          content:
+            application/json:
+              examples:
+                InvalidCreatedDate:
+                  $ref: '#/components/examples/InvalidCreatedDate'
+                NoResultsFoundForCreatedDate:
+                  $ref: '#/components/examples/NoResultsFoundForCreatedDate'
+              schema:
+                $ref: "#/components/schemas/Exception"
+          description: Resource Not Found
+
+tags:
+  - name: Python web scrapping APIs
+    description: "Python web scrapping APIs"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT  # for documentation purposes only
+
+  examples:
+    ArticleByDate:
+      value:
+        object: Exception
+        code: UN400
+        message: INVALID_INPUT
+        details: Request has failed while querying from the court. Please check your request parameters and retry.
+
+    InvalidCreatedDate:
+      value:
+        object: Exception
+        code: UN400
+        message: INVALID_INPUT
+        details: Requested articleCreatedDate is invalid.
+
+    NoResultsFoundForCreatedDate:
+      value:
+        object: Exception
+        code: UN400
+        message: INVALID_INPUT
+        details: No articles found for requested articleCreatedDate.
+
+  schemas:
+    ArticleByDate:
+      x-unicourt-container: false
+      type: object
+      properties:
+        object:
+          type: string
+          description: "Name of the object"
+          default: PACERPartySearchResults
+          minLength: 23
+          maxLength: 23
+          nullable: false
+        pacerContent:
+          $ref: '#/components/schemas/PACERPartySearchContent'
+        hasOnlyMetaInfo:
+          description: "This field determines if the UniCourt Content has only meta information. If the value is true and you require to get the latest updates of the case you will need to make a request to the updateCase API."
+          example: false
+          type: boolean
+        uniCourtContent:
+          $ref: 'https://gitlab.unicourt.net/researcher/apollo/a-src-srh-sdoc/-/raw/staging/a_src_srh_api_doc.yaml#/components/schemas/CaseSearchResult'
+      required:
+      - object
+      - pacerContent
+      - hasOnlyMetaInfo
+      - uniCourtContent
+
+    PossibleNormAttorney:
+      x-unicourt-container: false
+      title: PossibleNormAttorney
+      type: object
+      nullable: true
+      properties:
+        object:
+          type: string
+          description: Name of the object
+          default: PossibleNormAttorney
+          minLength: 20
+          maxLength: 20
+          nullable: false
+        normAttorneyId:
+          type: string
+          minLength: 18
+          maxLength: 18
+          nullable: false
+        normAttorneyName:
+          type: string
+          maxLength: 500
+          nullable: false
+        bestMatch:
+          type: boolean
+          default: false
+        confidenceScore:
+          type: number
+          format: float
+        scoreConstituents:
+          type: object
+          required:
+            - nameSimilarityScore
+            - otherPotentialNormAttorneys
+            - barId
+            - address
+            - email
+            - phone
+            - lawFirm
+          properties:
+            nameSimilarityScore:
+              type: number
+              format: float
+            otherPotentialNormAttorneys:
+              type: integer
+            barId:
+              type: string
+              maxLength: 250
+              nullable: false
+              enum:
+                - Matched
+                - Mismatched
+                - Not_Provided_By_Data_Source
+            address:
+              type: string
+              maxLength: 250
+              nullable: false
+              enum:
+                - Matched
+                - Mismatched
+                - Not_Provided_By_Data_Source
+            email:
+              type: string
+              maxLength: 250
+              nullable: false
+              enum:
+                - Matched
+                - Mismatched
+                - Not_Provided_By_Data_Source
+            phone:
+              type: string
+              maxLength: 250
+              nullable: false
+              enum:
+                - Matched
+                - Mismatched
+                - Not_Provided_By_Data_Source
+            lawFirm:
+              type: string
+              maxLength: 250
+              nullable: false
+              enum:
+                - Matched
+                - Mismatched
+                - Not_Provided_By_Data_Source
+        normAttorneyAPI:
+          x-logical-reference: NormAttorneyAPI
+          maxLength: 255
+          type: string
+          format: uri
+          nullable: false
+        associatedNormJudgesAPI:
+          x-logical-reference: AssociatedNormJudgesForNormAttorneyAPI
+          type: string
+          maxLength: 255
+          format: uri
+          nullable: false
+        associatedNormLawFirmsAPI:
+          x-logical-reference: AssociatedNormLawFirmsForNormAttorneyAPI
+          type: string
+          maxLength: 255
+          format: uri
+          nullable: false
+        associatedNormPartiesAPI:
+          x-logical-reference: AssociatedNormPartiesForNormAttorneyAPI
+          type: string
+          maxLength: 255
+          format: uri
+          nullable: false
+        caseCountAnalyticsByNormAttorneyAPI:
+          x-logical-reference: CaseCountAnalyticsByNormAttorneyAPI
+          type: string
+          maxLength: 255
+          format: uri
+          nullable: false
+        caseCountAnalyticsByOpposingNormAttorneyAPI:
+          x-logical-reference: CaseCountAnalyticsByOpposingNormAttorneyAPI
+          type: string
+          maxLength: 255
+          format: uri
+          nullable: false
+      required:
+        - object
+        - normAttorneyId
+        - normAttorneyName
+        - bestMatch
+        - confidenceScore
+        - scoreConstituents
+        - normAttorneyAPI
+        - associatedNormJudgesAPI
+        - associatedNormLawFirmsAPI
+        - associatedNormPartiesAPI
+        - caseCountAnalyticsByNormAttorneyAPI
+        - caseCountAnalyticsByOpposingNormAttorneyAPI
+    PossibleNormLawFirm:
+      x-unicourt-container: false
+      title: PossibleNormLawFirm
+      type: object
+      nullable: true
+      properties:
+        object:
+          type: string
+          description: Name of the object
+          default: PossibleNormLawFirm
+          minLength: 19
+          maxLength: 19
+          nullable: false
+        normLawFirmId:
+          type: string
+          minLength: 18
+          maxLength: 18
+          nullable: false
+        normLawFirmName:
+          type: string
+          maxLength: 500
+          nullable: false
+        bestMatch:
+          type: boolean
+          default: false
+        sourceDetails:
+          type: object
+          required:
+            - source
+            - linkedNormAttorneyIdArray
+          properties:
+            source:
+              type: string
+              maxLength: 250
+              enum:
+                - Case_Attorney_Linked_In_Other_Cases
+                - Case_Attorney_Field_Contains_Law_Firm
+              nullable: true
+            linkedNormAttorneyIdArray:
+              type: array
+              items:
+                type: string
+                maxLength: 18
+                minLength: 18
+                nullable: false
+        confidenceScore:
+          type: number
+          format: float
+        scoreConstituents:
+          type: object
+          required:
+            - nameSimilarityScore
+            - otherPotentialNormLawFirms
+            - secretaryOfStateId
+            - address
+            - email
+            - phone
+          properties:
+            nameSimilarityScore:
+              type: number
+              format: float
+            otherPotentialNormLawFirms:
+              type: integer
+            secretaryOfStateId:
+              type: string
+              maxLength: 250
+              nullable: false
+              enum:
+                - Matched
+                - Mismatched
+                - Not_Provided_By_Data_Source
+            address:
+              type: string
+              maxLength: 250
+              nullable: false
+              enum:
+                - Matched
+                - Mismatched
+                - Not_Provided_By_Data_Source
+            email:
+              type: string
+              maxLength: 250
+              nullable: false
+              enum:
+                - Matched
+                - Mismatched
+                - Not_Provided_By_Data_Source
+            phone:
+              type: string
+              maxLength: 250
+              nullable: false
+              enum:
+                - Matched
+                - Mismatched
+                - Not_Provided_By_Data_Source
+        normLawFirmAPI:
+          x-logical-reference: NormLawFirmAPI
+          type: string
+          maxLength: 255
+          format: uri
+          nullable: false
+        associatedNormAttorneyAPI:
+          x-logical-reference: AssociatedNormAttorneysForNormLawFirmAPI
+          type: string
+          maxLength: 255
+          format: uri
+          nullable: false
+        associatedNormJudgeAPI:
+          x-logical-reference: AssociatedNormJudgesForNormLawFirmAPI
+          type: string
+          maxLength: 255
+          format: uri
+          nullable: false
+        associatedNormPartiesAPI:
+          x-logical-reference: AssociatedNormPartiesForNormJudgeAPI
+          type: string
+          maxLength: 255
+          format: uri
+          nullable: false
+        caseCountAnalyticsByNormLawFirmAPI:
+          x-logical-reference: CaseCountAnalyticsByNormLawFirmAPI
+          type: string
+          maxLength: 255
+          format: uri
+          nullable: false
+        caseCountAnalyticsByOpposingNormLawFirmAPI:
+          x-logical-reference: CaseCountAnalyticsByOpposingNormLawFirmAPI
+          type: string
+          maxLength: 255
+          format: uri
+          nullable: false
+      required:
+        - object
+        - normLawFirmId
+        - normLawFirmName
+        - bestMatch
+        - sourceDetails
+        - confidenceScore
+        - scoreConstituents
+        - normLawFirmAPI
+        - associatedNormAttorneyAPI
+        - associatedNormJudgeAPI
+        - associatedNormPartiesAPI
+        - caseCountAnalyticsByNormLawFirmAPI
+        - caseCountAnalyticsByOpposingNormLawFirmAPI
+
+    Exception:
+      title: Exception
+      type: object
+      description: Exception object contains specific error code and its message related to the API request validation error or error occurred during API request processing.
+      nullable: True
+      properties:
+        object:
+          type: string
+          example: Exception
+          default: Exception
+          minLength: 9
+          maxLength: 9
+          nullable: False
+        code:
+          type: string
+          description: Indicates the type of error occurred.
+          minLength: 1
+          maxLength: 75
+          nullable: False
+        message:
+          type: string
+          description: Indicates the error message that describes the error code.
+          minLength: 1
+          maxLength: 255
+          nullable: False
+        details:
+          type: string
+          description: Describes what went wrong.
+          minLength: 1
+          maxLength: 255
+          nullable: False
+      required:
+        - object
+        - code
+        - message
+        - details
