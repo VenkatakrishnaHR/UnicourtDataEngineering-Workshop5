@@ -49,12 +49,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/ArticlesByDate'
           description: The request is received.
-        '404':
+        '400':
           content:
             application/json:
               examples:
                 InvalidCreatedDate:
                   $ref: '#/components/examples/InvalidCreatedDate'
+              schema:
+                $ref: "#/components/schemas/Exception"
+          description: Resource Not Found
+        '404':
+          content:
+            application/json:
+              examples:
                 NoResultsFoundForCreatedDate:
                   $ref: '#/components/examples/NoResultsFoundForCreatedDate'
               schema:
@@ -98,8 +105,8 @@ components:
     NoResultsFoundForCreatedDate:
       value:
         object: Exception
-        code: UN400
-        message: INVALID_INPUT
+        code: UN404
+        message: RESOURCE_NOT_FOUND
         details: No articles found for requested articleCreatedDate.
 
   schemas:
