@@ -8,10 +8,10 @@ servers:
   - url: '${SERVER_URL}'
 
 paths:
-  /articlesByDate/{articleCreatedDate}/:
+  /articlesByReleaseDate/{articleReleaseDate}/:
     parameters:
     - in: path
-      name: articleCreatedDate
+      name: articleReleaseDate
       schema:
         type: string
         format: date-time
@@ -20,24 +20,76 @@ paths:
         nullable: false
       examples:
         HTTP200-ValidDate:
-          summary: ValidArticleCreatedDate
+          summary: ValidArticleReleaseDate
           value: "2022-09-04"
-        HTTP404-InvalidCreatedDate:
-          summary: InvalidCreatedDate
+        HTTP404-InvalidReleaseDate:
+          summary: InvalidReleaseDate
           value: "2022 09 04"
-        HTTP404-NoResultsFoundForCreatedDate:
-          summary: NoResultsFoundForCreatedDate
+        HTTP404-NoResultsFoundForReleaseDate:
+          summary: NoResultsFoundForReleaseDate
           value: "2025-09-04"
       required: true
-      description: Retrieve the case with the specified caseId value.
+      description: Retrieve the articles released on specified releaseDate.
     get:
       security:
         - bearerAuth: [ ]
-      operationId: getArticlesByDate
+      operationId: getArticlesByReleaseDate
       tags:
         - Python web scrapping APIs
       summary: Get all articles for given date.
       description: Gives all the parsed articles from python blogs for a given date.
+      parameters:
+      - in: query
+        name: pageNumber
+        schema:
+          type: integer
+        examples:
+          HTTP200-ValidDate:
+            summary: ValidPageNumber
+            value: 1
+          HTTP404-InvalidReleaseDate:
+            summary: InvalidPageNumber
+            value: 2.5
+          HTTP404-NoResultsFoundForReleaseDate:
+            summary: PageNumberNotFound
+            value: 2000
+        description: Query parameter specifying the page number of the search results to be retrieved.
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                ValidDate:
+                  $ref: "#/components/examples/GetArticlesByReleaseDate"
+              schema:
+                $ref: '#/components/schemas/ArticlesByReleaseDate'
+          description: The request is received.
+        '400':
+          content:
+            application/json:
+              examples:
+                InvalidReleaseDate:
+                  $ref: '#/components/examples/InvalidReleaseDate'
+              schema:
+                $ref: "#/components/schemas/Exception"
+          description: Invalid Release Date.
+        '404':
+          content:
+            application/json:
+              examples:
+                NoResultsFoundForReleaseDate:
+                  $ref: '#/components/examples/NoResultsFoundForReleaseDate'
+              schema:
+                $ref: "#/components/schemas/Exception"
+          description: Resource Not Found.
+    post:
+      security:
+        - bearerAuth: [ ]
+      operationId: postArticlesByReleaseDate
+      tags:
+        - Python web scrapping APIs
+      summary: Extractor all articles for given date.
+      description: Extracts python blogs for a given date.
       parameters: []
       responses:
         '200':
@@ -45,28 +97,79 @@ paths:
             application/json:
               examples:
                 ValidDate:
-                  $ref: "#/components/examples/ArticlesByDate"
+                  $ref: "#/components/examples/ArticleByReleaseDateRequest"
               schema:
-                $ref: '#/components/schemas/ArticlesByDate'
+                $ref: '#/components/schemas/ArticleByReleaseDateRequest'
           description: The request is received.
         '400':
           content:
             application/json:
               examples:
-                InvalidCreatedDate:
-                  $ref: '#/components/examples/InvalidCreatedDate'
+                InvalidReleaseDate:
+                  $ref: '#/components/examples/InvalidReleaseDate'
               schema:
                 $ref: "#/components/schemas/Exception"
-          description: Resource Not Found
+          description: Invalid Release Date.
+
+  /articleByReleaseDateRequest/{requestId}/:
+    parameters:
+      - in: path
+        name: requestId
+        schema:
+          type: string
+          minLength: 12
+          maxLength: 12
+          nullable: false
+        examples:
+          HTTP200-ValidDate:
+            summary: ValidArticleReleaseDate
+            value: "ARDR11223422"
+          HTTP404-InvalidReleaseDate:
+            summary: InvalidReleaseDate
+            value: "ARDR112234224455"
+          HTTP404-NoResultsFoundForReleaseDate:
+            summary: NoResultsFoundForReleaseDate
+            value: "ARDR00000000"
+        required: true
+        description: Get status of fetch article by release date request.
+    get:
+      security:
+        - bearerAuth: [ ]
+      operationId: getArticleByReleaseDateRequest
+      tags:
+        - Python web scrapping APIs
+      summary: Get status of fetch article by release date request.
+      description: Get status of fetch article by release date request.
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                ValidDate:
+                  $ref: "#/components/examples/ArticleByReleaseDateRequest"
+              schema:
+                $ref: '#/components/schemas/ArticleByReleaseDateRequest'
+          description: The request is received.
+        '400':
+          content:
+            application/json:
+              examples:
+                InvalidReleaseDate:
+                  $ref: '#/components/examples/InvalidRequestId'
+              schema:
+                $ref: "#/components/schemas/Exception"
+          description: Invalid Release Date.
         '404':
           content:
             application/json:
               examples:
-                NoResultsFoundForCreatedDate:
-                  $ref: '#/components/examples/NoResultsFoundForCreatedDate'
+                NoResultsFoundForReleaseDate:
+                  $ref: '#/components/examples/NoResultsFoundForRequestId'
               schema:
                 $ref: "#/components/schemas/Exception"
-          description: Resource Not Found
+          description: Resource Not Found.
+
 
 tags:
   - name: Python web scrapping APIs
@@ -80,65 +183,85 @@ components:
       bearerFormat: JWT  # for documentation purposes only
 
   examples:
-    ArticlesByDate:
+    ArticleByReleaseDateRequest:
       value:
-        object: ArticlesByDate
-        articleCreatedDate: 2022-09-04
-        articlesByDateArray:
+        object: ArticleByReleaseDateRequest
+        requestId: ARDR11223422
+        status: "IN PROGRESS"
+
+    GetArticlesByReleaseDate:
+      value:
+        object: ArticlesByReleaseDate
+        articleReleaseDate: 2022-09-04
+        articlesByReleaseDateArray:
           - object: Article
             title: "Python 3.13.0 alpha 1 is now available"
             releaseDate: 2022-09-04
             author: "Thomas Wouters"
             blogTime: "8:31 AM"
-            createdDate: 2022-09-04
+            ReleaseDate: 2022-09-04
         nextPageAPI: null
         totalPages: 1
         totalCount: 1
 
-    InvalidCreatedDate:
+    InvalidReleaseDate:
       value:
         object: Exception
         code: UN400
         message: INVALID_INPUT
-        details: Requested articleCreatedDate is invalid.
+        details: Requested articleReleaseDate is invalid.
 
-    NoResultsFoundForCreatedDate:
+    NoResultsFoundForReleaseDate:
       value:
         object: Exception
         code: UN404
         message: RESOURCE_NOT_FOUND
-        details: No articles found for requested articleCreatedDate.
+        details: No articles found for requested articleReleaseDate.
+
+    InvalidRequestId:
+      value:
+        object: Exception
+        code: UN400
+        message: INVALID_INPUT
+        details: Requested requestId is invalid.
+
+    NoResultsFoundForRequestId:
+      value:
+        object: Exception
+        code: UN404
+        message: RESOURCE_NOT_FOUND
+        details: No request found for requested requestId.
 
   schemas:
-    ArticlesByDate:
+    ArticlesByReleaseDate:
       type: object
       properties:
         object:
           type: string
           description: "Array of articles posted on given date"
-          default: ArticlesByDate
+          default: ArticlesByReleaseDate
           minLength: 14
           maxLength: 14
           nullable: false
-        articleCreatedDate:
+        articleReleaseDate:
           type: string
           format: date-time
           minLength: 10
           maxLength: 10
           example: 2022-09-04
           nullable: false
-        articlesByDateArray:
+        articlesByReleaseDateArray:
           type: array
           items:
             $ref: '#/components/schemas/Article'
         nextPageAPI:
-          description: Link to next page of the ArticlesByDate Results.
-          example: ${SERVER_URL}/articlesByDate/2022-02-01/?pageNumber=2
+          description: Link to next page of the ArticlesByReleaseDate Results.
+          example: ${SERVER_URL}/articlesByReleaseDate/2022-02-01/?pageNumber=2
           type: string
           maxLength: 255
           nullable: true
         totalPages:
-          description: Total number of pages to obtain all the objects of the ArticlesByDate Results.
+          description: Total number of pages to obtain all the objects of the ArticlesByReleaseDate Results.
           example: 3
           type: integer
         totalCount:
@@ -147,8 +270,8 @@ components:
           type: integer
       required:
       - object
-      - articleCreatedDate
-      - articlesByDateArray
+      - articleReleaseDate
+      - articlesByReleaseDateArray
       - nextPageAPI
       - totalPages
       - totalCount
@@ -209,7 +332,7 @@ components:
       title: Exception
       type: object
       description: Exception object contains specific error code and its message related to the API request validation error or error occurred during API request processing.
-      nullable: True
+      nullable: true
       properties:
         object:
           type: string
@@ -217,27 +340,57 @@ components:
           default: Exception
           minLength: 9
           maxLength: 9
-          nullable: False
+          nullable: false
         code:
           type: string
           description: Indicates the type of error occurred.
           minLength: 1
           maxLength: 75
-          nullable: False
+          nullable: false
         message:
           type: string
           description: Indicates the error message that describes the error code.
           minLength: 1
           maxLength: 255
-          nullable: False
+          nullable: false
         details:
           type: string
           description: Describes what went wrong.
           minLength: 1
           maxLength: 255
-          nullable: False
+          nullable: false
       required:
         - object
         - code
         - message
         - details
+
+    ArticleByReleaseDateRequest:
+      title: Article By Release Date Request
+      type: object
+      description: Extraction request was received.
+      nullable: false
+      properties:
+        object:
+          type: string
+          default: ArticleByReleaseDateRequest
+          minLength: 27
+          maxLength: 27
+          nullable: false
+        requestId:
+          type: string
+          description: Unique Request ID
+          minLength: 13
+          maxLength: 12
+          example: ARDR11223422
+          nullable: false
+        status:
+          type: string
+          enum: [ 'IN PROGRESS', 'COMPLETED', "FAILED" ]
+          description: Current status of request.
+          example: 'IN PROGRESS'
+          nullable: false
+      required:
+        - object
+        - requestId
+        - status
