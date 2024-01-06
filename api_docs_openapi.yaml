@@ -5,7 +5,7 @@ info:
   termsOfService: ""
   version: '2.0'
 servers:
-  - url: '${SERVER_URL}'
+  - url: 'http://localhost:8000/'
 
 paths:
   /articlesByReleaseDate/{articleReleaseDate}/:
@@ -47,7 +47,7 @@ paths:
           HTTP200-ValidDate:
             summary: ValidPageNumber
             value: 1
-          HTTP404-InvalidReleaseDate:
+          HTTP404-InvalidPageNumber:
             summary: InvalidPageNumber
             value: 2.5
           HTTP404-NoResultsFoundForReleaseDate:
@@ -139,7 +139,7 @@ paths:
             application/json:
               examples:
                 ValidDate:
-                  $ref: "#/components/examples/ArticleByReleaseDateRequest"
+                  $ref: "#/components/examples/ExtractArticleByReleaseDateRequest"
               schema:
                 $ref: '#/components/schemas/ExtractArticleByReleaseDateRequest'
           description: The request is received.
@@ -159,19 +159,19 @@ paths:
         name: extractionRequestId
         schema:
           type: string
-          minLength: 12
-          maxLength: 12
+          minLength: 14
+          maxLength: 14
           nullable: false
         examples:
           HTTP200-ValidDate:
             summary: ValidArticleReleaseDate
-            value: "ARDR11223422"
-          HTTP404-InvalidReleaseDate:
-            summary: InvalidReleaseDate
-            value: "ARDR112234224455"
+            value: "ARDR1122342299"
+          HTTP404-InvalidExtractionRequestId:
+            summary: InvalidExtractionRequestId
+            value: "ARDR11223422995433"
           HTTP404-NoResultsFoundForReleaseDate:
             summary: NoResultsFoundForReleaseDate
-            value: "ARDR00000000"
+            value: "ARDR0000000000"
         required: true
         description: Get status of fetch article by release date request.
     get:
@@ -197,7 +197,7 @@ paths:
           content:
             application/json:
               examples:
-                InvalidReleaseDate:
+                InvalidExtractionRequestId:
                   $ref: '#/components/examples/InvalidExtractionRequestId'
               schema:
                 $ref: "#/components/schemas/Exception"
@@ -228,7 +228,7 @@ components:
     ExtractArticleByReleaseDateRequest:
       value:
         object: ExtractArticleByReleaseDateRequest
-        extractionRequestId: ARDR11223422
+        extractionRequestId: ARDR1122342299
         status: "IN PROGRESS"
 
     GetArticlesByReleaseDate:
@@ -272,7 +272,7 @@ components:
         object: Exception
         code: UN404
         message: RESOURCE_NOT_FOUND
-        details: No request found for requested extractionRequestId.
+        details: No result found for requested extractionRequestId.
 
   schemas:
     ArticlesByReleaseDate:
@@ -422,9 +422,9 @@ components:
         extractionRequestId:
           type: string
           description: Unique Request ID
-          minLength: 13
-          maxLength: 12
-          example: ARDR11223422
+          minLength: 14
+          maxLength: 14
+          example: ARDR1122342299
           nullable: false
         status:
           type: string
